@@ -36,7 +36,6 @@
     -webkit-text-size-adjust: 100%;
   }
 
-  /* sparkles layer */
   .fx{
     position:fixed; inset:0;
     pointer-events:none; z-index:0;
@@ -64,6 +63,7 @@
     margin: 0 auto;
   }
 
+  /* ===== Header (iPhoneで崩れないように強化) ===== */
   header{
     display:flex;
     align-items:flex-start;
@@ -71,8 +71,15 @@
     gap:12px;
     margin-top: 6px;
     margin-bottom: 12px;
+    flex-wrap: wrap; /* これが効く */
   }
-  .brand{ display:flex; flex-direction:column; gap:6px; }
+  .brand{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    min-width: 240px;
+    flex: 1 1 320px;
+  }
   .title{
     display:flex;
     align-items:center;
@@ -81,6 +88,7 @@
     letter-spacing:.02em;
     font-size: clamp(20px, 3.8vw, 30px);
     line-height:1.1;
+    flex-wrap: wrap;
   }
   .pill{
     display:inline-flex;
@@ -93,6 +101,7 @@
     font-size:12px;
     color:var(--muted);
     white-space:nowrap;
+    max-width: 100%;
   }
   .heart{
     width:18px;height:18px;
@@ -113,6 +122,7 @@
     flex-wrap:wrap;
     justify-content:flex-end;
     align-items:center;
+    flex: 0 1 auto;
   }
 
   .card{
@@ -133,29 +143,65 @@
   }
 
   .boardCard{ padding: 14px; }
+
+  /* ===== Board header (石数の改行崩れ対策) ===== */
   .boardHeader{
-    display:flex; justify-content:space-between; align-items:center;
-    gap:10px; margin-bottom: 10px;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:10px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
   }
-  .status{ display:flex; flex-direction:column; gap:6px; min-width:0; }
-  .statusLine{ display:flex; align-items:center; gap:10px; font-weight:800; font-size:14px; }
+  .status{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    min-width: 0;
+    flex: 1 1 260px;
+  }
+  .statusLine{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:800;
+    font-size: 14px;
+    flex-wrap: wrap;
+  }
   .subLine{
     font-size: 12px;
     color: var(--muted);
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
   }
-  .scoreRow{ display:flex; gap:10px; align-items:center; }
+
+  .scoreRow{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    flex: 0 0 auto;
+    flex-wrap: nowrap;           /* ここが重要 */
+  }
   .badge{
-    display:flex; align-items:center; gap:8px;
-    padding:8px 10px; border-radius: 14px;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:8px 10px;
+    border-radius: 14px;
     background: rgba(255,255,255,.7);
     border: 1px solid rgba(255,255,255,.8);
     box-shadow: 0 8px 16px rgba(0,0,0,.06);
-    font-weight:800; font-size:12px;
+    font-weight:800;
+    font-size:12px;
+    white-space: nowrap;         /* ここが重要 */
+    line-height: 1.1;
   }
+  .badge span:last-child{ display:inline-block; min-width: 1ch; }
   .dot{
     width:14px;height:14px;border-radius:50%;
     box-shadow: inset 0 0 0 2px rgba(0,0,0,.08), 0 4px 10px rgba(0,0,0,.08);
+    flex: 0 0 auto;
   }
   .dot.pink{ background: radial-gradient(circle at 30% 30%, #fff 0 18%, var(--pink2) 19% 55%, var(--pink) 56% 100%); }
   .dot.white{ background: radial-gradient(circle at 30% 30%, #fff 0 35%, #f3f3f6 36% 70%, #ffffff 71% 100%); }
@@ -168,13 +214,12 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* ★ ここが「マス均一化」の決め手：cellにaspect-ratio、boardにgap */
   .board{
     width:100%;
     aspect-ratio:1/1;
     display:grid;
     grid-template-columns: repeat(8, 1fr);
-    gap: 8px;                 /* ← iPhoneでも均一に見える */
+    gap: 8px;
     align-items: stretch;
     background: radial-gradient(800px 600px at 30% 20%, rgba(255,255,255,.12), transparent 55%),
                 linear-gradient(135deg, var(--grid), var(--grid2));
@@ -187,7 +232,7 @@
 
   .cell{
     position:relative;
-    aspect-ratio: 1 / 1;      /* ← 常に正方形 */
+    aspect-ratio: 1 / 1;
     width:100%;
     border-radius: 12px;
     border: 1px solid rgba(255,255,255,.18);
@@ -236,6 +281,7 @@
   }
 
   .side{ padding: 14px; }
+
   .sectionTitle{
     font-weight:900;
     font-size: 13px;
@@ -260,6 +306,7 @@
     cursor:pointer;
     transition: transform .08s ease, filter .15s ease;
     -webkit-tap-highlight-color: transparent;
+    white-space: nowrap;
   }
   .btn:hover{ transform: translateY(-1px); filter: brightness(1.02); }
   .btn:active{ transform: translateY(0px); }
@@ -303,7 +350,6 @@
     border: 1px solid rgba(255,255,255,.75);
   }
 
-  /* Center overlays */
   .overlay{
     position:absolute;
     inset:0;
@@ -332,7 +378,7 @@
     letter-spacing:.02em;
   }
 
-  /* ====== ルーレット（視認性アップ版） ====== */
+  /* Roulette */
   .roulette{
     display:flex;
     gap:14px;
@@ -373,7 +419,6 @@
     border: 1px solid rgba(0,0,0,.05);
   }
 
-  /* ★ 指し示し（大きい矢印＋キラキラ） */
   .pointer{
     position:absolute;
     top:-14px;
@@ -400,7 +445,6 @@
     to{ transform: translateX(-50%) translateY(-4px); }
   }
 
-  /* ★ どこを指してるか分かるように、上の位置に光るリング */
   .glowRing{
     position:absolute;
     inset:-6px;
@@ -427,6 +471,7 @@
     border: 1px solid rgba(255,255,255,.85);
     box-shadow: 0 10px 18px rgba(0,0,0,.10);
     font-weight: 1000;
+    white-space: nowrap;
   }
 
   .passBtn{
@@ -461,7 +506,6 @@
   .toast.show{ display:block; animation: pop .18s ease-out; }
   @keyframes pop{ from{ transform:translateX(-50%) scale(.98); opacity:.6; } to{ transform:translateX(-50%) scale(1); opacity:1; } }
 
-  /* tiny celebration hearts */
   .burst{
     position:absolute;
     left:50%; top:50%;
@@ -484,12 +528,44 @@
 
   .safeBottom{ padding-bottom: max(14px, env(safe-area-inset-bottom)); }
 
-  /* iPhoneでの余白/文字サイズ微調整 */
+  /* ===== iPhone最適化（ここがメイン） ===== */
   @media (max-width: 430px){
     .wrap{ padding: 14px 12px 22px; }
+
+    header{
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+    }
+    .brand{ min-width: 0; flex: 1 1 auto; }
+    .title{ justify-content:flex-start; }
+    #modePill{ align-self:flex-start; }
+
+    .topActions{
+      width: 100%;
+      justify-content: flex-start;
+      gap: 8px;
+    }
+    .topActions .btn.small{
+      flex: 1 1 calc(50% - 8px);
+      text-align:center;
+    }
+
     .boardCard{ padding: 12px; }
     .side{ padding: 12px; }
-    .btn.small{ font-size: 12px; }
+
+    .boardHeader{ gap: 8px; }
+    .scoreRow{
+      width: 100%;
+      justify-content: flex-start;
+      gap: 8px;
+    }
+    .badge{ padding: 8px 10px; }
+
+    .subLine{
+      /* 画面が狭い時は省略が分かるように */
+      max-width: 92vw;
+    }
   }
 </style>
 </head>
@@ -526,7 +602,6 @@
       <div class="boardWrap">
         <div class="board" id="board" role="grid" aria-label="オセロ盤"></div>
 
-        <!-- Pass overlay -->
         <div class="overlay" id="passOverlay" role="dialog" aria-modal="true">
           <div class="modal">
             <h2>置ける場所がないよ</h2>
@@ -537,7 +612,6 @@
           </div>
         </div>
 
-        <!-- Roulette overlay -->
         <div class="overlay" id="rouletteOverlay" role="dialog" aria-modal="true">
           <div class="modal">
             <h2>先攻ルーレット</h2>
@@ -562,7 +636,6 @@
           </div>
         </div>
 
-        <!-- End overlay -->
         <div class="overlay" id="endOverlay" role="dialog" aria-modal="true">
           <div class="modal">
             <h2 id="endTitle">ゲーム終了</h2>
@@ -635,7 +708,6 @@
 
 <script>
 (() => {
-  // ====== 定義 ======
   const SIZE = 8;
   const EMPTY = 0;
   const PINK = 1;
@@ -646,7 +718,6 @@
     [1,-1],[1,0],[1,1]
   ];
 
-  // UI
   const boardEl = document.getElementById('board');
   const turnLine = document.getElementById('turnLine');
   const subLine  = document.getElementById('subLine');
@@ -688,13 +759,11 @@
   const undoBtn = document.getElementById('undoBtn');
   const toastEl = document.getElementById('toast');
 
-  // ====== State ======
   let board = makeInitialBoard();
   let current = PINK;
   let gameMode = 'cpu';
   let cpuLevel = 3;
 
-  // CPU戦: プレイヤーはピンク固定
   let playerColor = PINK;
   let cpuColor = WHITE;
 
@@ -704,14 +773,14 @@
   let spinning = false;
   let rouletteAutoTimer = null;
 
-  // CPUスピード（要望：+0.2秒）
-  const CPU_DELAY_MS = 620; // 420 -> 620
+  const CPU_DELAY_MS = 620;
 
-  // stats
+  // ★ ルーレット結果表示を+1秒（自動クローズ延長）
+  const ROULETTE_AUTO_CLOSE_MS = 1900; // 900 -> 1900（+1秒）
+
   const STATS_KEY = 'sparkly_othello_stats_v1';
   let stats = loadStats();
 
-  // ====== 盤面 ======
   function makeEmptyBoard(){
     return Array.from({length: SIZE}, () => Array(SIZE).fill(EMPTY));
   }
@@ -773,7 +842,6 @@
     return getLegalMoves(b, PINK).length === 0 && getLegalMoves(b, WHITE).length === 0;
   }
 
-  // ====== 表示 ======
   function render(){
     const {p,w} = countStones(board);
     pinkCountEl.textContent = p;
@@ -848,7 +916,6 @@
     toastEl._t = setTimeout(()=>toastEl.classList.remove('show'), 1600);
   }
 
-  // ====== 履歴（Undo） ======
   function pushHistory(){
     history.push({ board: cloneBoard(board), current });
     if (history.length > 140) history.shift();
@@ -873,7 +940,6 @@
     render();
   }
 
-  // ====== 終了 ======
   function endGame(){
     const {p,w} = countStones(board);
     let result;
@@ -906,11 +972,9 @@
     }
   }
 
-  // ====== パス ======
   function maybeShowPass(){
     const legal = getLegalMoves(board, current);
     if (legal.length === 0 && !isGameOver(board)){
-      // CPUは自動パス、プレイヤー側は中央ボタン
       if (gameMode==='cpu' && current===cpuColor){
         setTimeout(()=>{
           if (isGameOver(board)) return;
@@ -935,7 +999,6 @@
     nextTurn();
   }
 
-  // ====== クリック ======
   function handleCellClick(r,c){
     if (isBusy) return;
     if (endOverlay.classList.contains('show')) return;
@@ -956,9 +1019,7 @@
     nextTurn();
   }
 
-  // ====== ルーレット ======
   function burst(){
-    // ちいさいハート/キラキラが飛ぶ
     burstEl.innerHTML = '';
     const icons = ['💖','✨','💗','🌟','💕'];
     const n = 12;
@@ -991,7 +1052,7 @@
   }
 
   function closeRoulette(){
-    if (spinning) return; // 回転中は閉じない（事故防止）
+    if (spinning) return;
     rouletteOverlay.classList.remove('show');
   }
 
@@ -1005,14 +1066,12 @@
 
     const startColor = (Math.random() < 0.5) ? PINK : WHITE;
 
-    const base = 360 * (5 + Math.floor(Math.random()*3)); // 5〜7回転
-    // 目安：pointerは上（0deg）なので、その近辺に色が来るようにoffset
+    const base = 360 * (5 + Math.floor(Math.random()*3));
     const offset = (startColor===PINK) ? 18 : 198;
     const deg = base + offset + Math.floor(Math.random()*26);
     wheelEl.style.transition = 'transform 1.55s cubic-bezier(.08,.82,.18,1)';
     wheelEl.style.transform = `rotate(${deg}deg)`;
 
-    // tickっぽい演出（文字）
     rouletteText.textContent = 'カチカチカチ…✨';
 
     setTimeout(()=>{
@@ -1024,7 +1083,6 @@
 
       current = startColor;
 
-      // CPU戦：プレイヤーは必ずピンク固定
       if (gameMode==='cpu'){
         playerColor = PINK;
         cpuColor = WHITE;
@@ -1036,19 +1094,18 @@
 
       render();
 
-      // CPUが先攻なら、少し待って打つ（要望：+0.2秒）
       if (gameMode==='cpu' && current===cpuColor){
         setTimeout(()=>cpuThinkAndMove(), CPU_DELAY_MS);
       }
 
-      // 自動ルーレットは見せ場の後に自動で閉じる
+      // ★ 結果表示を長く（+1秒）
       if (isAuto){
-        setTimeout(()=>closeRoulette(), 900);
+        setTimeout(()=>closeRoulette(), ROULETTE_AUTO_CLOSE_MS);
       }
     }, 1600);
   }
 
-  // ====== CPU ======
+  // CPU（そのまま）
   const CORNERS = new Set(["0,0","0,7","7,0","7,7"]);
   function isEdge(r,c){ return r===0||r===7||c===0||c===7; }
   function isXSq(r,c){
@@ -1061,7 +1118,6 @@
     if (r===6&&c===6) return b[7][7]===EMPTY;
     return false;
   }
-
   function evaluate(b, color){
     const opp = -color;
     const {p,w} = countStones(b);
@@ -1217,10 +1273,9 @@
       current = -cpuColor;
       isBusy = false;
       nextTurn();
-    }, CPU_DELAY_MS); // ★ +0.2秒反映
+    }, CPU_DELAY_MS);
   }
 
-  // ====== stats ======
   function loadStats(){
     try{
       const raw = localStorage.getItem(STATS_KEY);
@@ -1244,7 +1299,6 @@
     renderStats();
   }
 
-  // ====== 新規ゲーム（★開始時に自動ルーレット） ======
   function newGame(keepMode=true){
     board = makeInitialBoard();
     history = [];
@@ -1266,13 +1320,10 @@
 
     render();
 
-    // ★ 対戦開始時：CPU戦も含めて自動でルーレットを回す
-    setTimeout(()=>{
-      openRoulette({autoSpin:true});
-    }, 450);
+    setTimeout(()=>{ openRoulette({autoSpin:true}); }, 450);
   }
 
-  // ====== イベント ======
+  // Events
   boardEl.addEventListener('click', (e)=>{
     const cell = e.target.closest('.cell');
     if (!cell) return;
@@ -1280,7 +1331,6 @@
   });
 
   passBtn.addEventListener('click', doPass);
-
   newGameBtn.addEventListener('click', ()=> newGame(false));
   rouletteBtn.addEventListener('click', ()=> openRoulette({autoSpin:false}));
 
@@ -1300,7 +1350,6 @@
   });
 
   resetStatsBtn.addEventListener('click', ()=>{
-    // iPhoneでも扱いやすい confirm のまま
     if (confirm('累計記録をリセットする？（元に戻せません）')){
       resetStats();
     }
@@ -1337,7 +1386,6 @@
     }
   });
 
-  // ====== 初期化 ======
   function init(){
     gameMode = modeSelect.value;
     cpuLevel = parseInt(levelSelect.value,10);
