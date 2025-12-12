@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>キラキラ オセロ（ピンク×ホワイト）</title>
+<style>
+  :root{
+    --bg1:#ffe6f4;
+    --bg2:#fff6fb;
+    --card:#ffffffcc;
+    --ink:#2b2330;
+    --muted:#6c5a6f;
+    --pink:#ff4fb3;
+    --pink2:#ff77c6;
+    --white:#ffffff;
+    --grid:#2e8b77;
+    --grid2:#1e6e5b;
+    --shadow: 0 14px 40px rgba(26, 10, 30, .18);
+    --shadow2: 0 8px 20px rgba(26, 10, 30, .12);
+    --radius: 22px;
+  }
+
+  *{ box-sizing:border-box; }
+  html, body{ height:100%; }
+  body{
+    margin:0;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", "Segoe UI", Arial, sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(1200px 900px at 15% 15%, #fff 0%, transparent 55%),
+      radial-gradient(900px 700px at 85% 25%, #fff 0%, transparent 55%),
+      linear-gradient(135deg, var(--bg1), var(--bg2));
+    min-height:100svh;
+    overflow-x:hidden;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* sparkles layer */
+  .fx{
+    position:fixed; inset:0;
+    pointer-events:none; z-index:0;
+    opacity:.9;
+    background:
+      radial-gradient(circle at 12% 18%, rgba(255,255,255,.95) 0 2px, transparent 3px),
+      radial-gradient(circle at 34% 10%, rgba(255,255,255,.9) 0 1.6px, transparent 3px),
+      radial-gradient(circle at 68% 16%, rgba(255,255,255,.92) 0 2px, transparent 3px),
+      radial-gradient(circle at 84% 42%, rgba(255,255,255,.88) 0 1.6px, transparent 3px),
+      radial-gradient(circle at 20% 72%, rgba(255,255,255,.92) 0 2px, transparent 3px),
+      radial-gradient(circle at 76% 78%, rgba(255,255,255,.9) 0 2px, transparent 3px);
+    filter: drop-shadow(0 0 8px rgba(255,255,255,.35));
+    animation: twinkle 3.2s ease-in-out infinite alternate;
+  }
+  @keyframes twinkle{
+    from{ transform: translateY(0); opacity:.85; }
+    to{ transform: translateY(-6px); opacity:1; }
+  }
+
+  .wrap{
+    position:relative;
+    z-index:1;
+    padding: 18px 14px 26px;
+    max-width: 980px;
+    margin: 0 auto;
+  }
+
+  header{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+    margin-top: 6px;
+    margin-bottom: 12px;
+  }
+  .brand{ display:flex; flex-direction:column; gap:6px; }
+  .title{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:900;
+    letter-spacing:.02em;
+    font-size: clamp(20px, 3.8vw, 30px);
+    line-height:1.1;
+  }
+  .pill{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:6px 10px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #fff, #fff0f8);
+    box-shadow: var(--shadow2);
+    font-size:12px;
+    color:var(--muted);
+    white-space:nowrap;
+  }
+  .heart{
+    width:18px;height:18px;
+    display:inline-block;
+    background:
+      radial-gradient(circle at 30% 35%, #fff 0 22%, transparent 23%),
+      radial-gradient(circle at 70% 35%, #fff 0 22%, transparent 23%),
+      radial-gradient(circle at 50% 72%, #fff 0 28%, transparent 29%);
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,.08));
+    mask: radial-gradient(circle at 30% 35%, #000 0 27%, transparent 28%),
+          radial-gradient(circle at 70% 35%, #000 0 27%, transparent 28%),
+          conic-gradient(from 225deg at 50% 58%, #000 0 90deg, transparent 0) ;
+  }
+
+  .topActions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+    align-items:center;
+  }
+
+  .card{
+    background: var(--card);
+    border: 1px solid rgba(255,255,255,.65);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(10px);
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns: 1.15fr .85fr;
+    gap: 14px;
+  }
+  @media (max-width: 860px){
+    .grid{ grid-template-columns: 1fr; }
+  }
+
+  .boardCard{ padding: 14px; }
+  .boardHeader{
+    display:flex; justify-content:space-between; align-items:center;
+    gap:10px; margin-bottom: 10px;
+  }
+  .status{ display:flex; flex-direction:column; gap:6px; min-width:0; }
+  .statusLine{ display:flex; align-items:center; gap:10px; font-weight:800; font-size:14px; }
+  .subLine{
+    font-size: 12px;
+    color: var(--muted);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .scoreRow{ display:flex; gap:10px; align-items:center; }
+  .badge{
+    display:flex; align-items:center; gap:8px;
+    padding:8px 10px; border-radius: 14px;
+    background: rgba(255,255,255,.7);
+    border: 1px solid rgba(255,255,255,.8);
+    box-shadow: 0 8px 16px rgba(0,0,0,.06);
+    font-weight:800; font-size:12px;
+  }
+  .dot{
+    width:14px;height:14px;border-radius:50%;
+    box-shadow: inset 0 0 0 2px rgba(0,0,0,.08), 0 4px 10px rgba(0,0,0,.08);
+  }
+  .dot.pink{ background: radial-gradient(circle at 30% 30%, #fff 0 18%, var(--pink2) 19% 55%, var(--pink) 56% 100%); }
+  .dot.white{ background: radial-gradient(circle at 30% 30%, #fff 0 35%, #f3f3f6 36% 70%, #ffffff 71% 100%); }
+
+  .boardWrap{
+    position:relative;
+    width:min(520px, 100%);
+    margin: 0 auto;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* ★ ここが「マス均一化」の決め手：cellにaspect-ratio、boardにgap */
+  .board{
+    width:100%;
+    aspect-ratio:1/1;
+    display:grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 8px;                 /* ← iPhoneでも均一に見える */
+    align-items: stretch;
+    background: radial-gradient(800px 600px at 30% 20%, rgba(255,255,255,.12), transparent 55%),
+                linear-gradient(135deg, var(--grid), var(--grid2));
+    border-radius: 18px;
+    padding: 10px;
+    box-shadow: 0 18px 42px rgba(18, 60, 50, .25);
+    border: 1px solid rgba(255,255,255,.25);
+    overflow:hidden;
+  }
+
+  .cell{
+    position:relative;
+    aspect-ratio: 1 / 1;      /* ← 常に正方形 */
+    width:100%;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,.18);
+    background: rgba(255,255,255,.07);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    user-select:none;
+    transition: transform .08s ease, background .15s ease;
+    -webkit-user-select:none;
+  }
+  .cell:hover{ transform: translateY(-1px); background: rgba(255,255,255,.11); }
+  .cell:active{ transform: translateY(0); }
+
+  .cell.disabled{ cursor: default; opacity: .96; }
+  .cell.disabled:hover{ transform:none; background: rgba(255,255,255,.07); }
+
+  .stone{
+    width: 78%;
+    aspect-ratio: 1/1;
+    border-radius: 50%;
+    box-shadow: inset 0 8px 18px rgba(255,255,255,.35),
+                inset 0 -10px 20px rgba(0,0,0,.20),
+                0 12px 22px rgba(0,0,0,.18);
+    transform: scale(.98);
+  }
+  .stone.pink{
+    background: radial-gradient(circle at 28% 28%, #fff 0 18%, var(--pink2) 19% 52%, var(--pink) 53% 100%);
+  }
+  .stone.white{
+    background: radial-gradient(circle at 28% 28%, #fff 0 42%, #f2f2f6 43% 72%, #ffffff 73% 100%);
+  }
+
+  .hint{
+    position:absolute;
+    width: 26%;
+    aspect-ratio:1/1;
+    border-radius:50%;
+    background: rgba(255,255,255,.22);
+    border: 1px dashed rgba(255,255,255,.55);
+    box-shadow: 0 10px 18px rgba(0,0,0,.10);
+    filter: drop-shadow(0 0 10px rgba(255,255,255,.18));
+    opacity:.95;
+    pointer-events:none;
+  }
+
+  .side{ padding: 14px; }
+  .sectionTitle{
+    font-weight:900;
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    margin: 8px 2px 10px;
+  }
+  .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+
+  button, select{ font: inherit; }
+
+  .btn{
+    border: none;
+    border-radius: 16px;
+    padding: 10px 12px;
+    font-weight: 900;
+    background: rgba(255,255,255,.75);
+    color: var(--ink);
+    box-shadow: 0 10px 18px rgba(0,0,0,.10);
+    border: 1px solid rgba(255,255,255,.85);
+    cursor:pointer;
+    transition: transform .08s ease, filter .15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn:hover{ transform: translateY(-1px); filter: brightness(1.02); }
+  .btn:active{ transform: translateY(0px); }
+  .btn.primary{ background: linear-gradient(135deg, #fff, #ffe4f4); }
+  .btn.pink{ background: linear-gradient(135deg, #fff, #ffd3eb); }
+  .btn.danger{ background: linear-gradient(135deg, #fff, #ffe6e6); }
+  .btn.small{ padding:8px 10px; border-radius: 14px; font-weight:800; font-size: 12px; }
+
+  .select{
+    padding: 10px 12px;
+    border-radius: 16px;
+    background: rgba(255,255,255,.75);
+    border: 1px solid rgba(255,255,255,.85);
+    box-shadow: 0 10px 18px rgba(0,0,0,.10);
+    font-weight: 900;
+    cursor:pointer;
+  }
+
+  .kpi{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:10px;
+  }
+  .kpi .box{
+    padding:12px;
+    border-radius: 18px;
+    background: rgba(255,255,255,.68);
+    border: 1px solid rgba(255,255,255,.82);
+    box-shadow: 0 10px 18px rgba(0,0,0,.08);
+  }
+  .kpi .num{ font-size: 20px; font-weight: 1000; }
+  .kpi .lab{ font-size: 12px; color: var(--muted); font-weight: 900; letter-spacing:.02em; }
+
+  .note{
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+    background: rgba(255,255,255,.55);
+    padding: 10px 12px;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,.75);
+  }
+
+  /* Center overlays */
+  .overlay{
+    position:absolute;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index: 10;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, .18);
+    backdrop-filter: blur(10px);
+  }
+  .overlay.show{ display:flex; }
+
+  .modal{
+    width: min(440px, 92%);
+    background: rgba(255,255,255,.88);
+    border: 1px solid rgba(255,255,255,.92);
+    border-radius: 24px;
+    box-shadow: var(--shadow);
+    padding: 14px;
+  }
+
+  .modal h2{
+    margin: 2px 0 10px;
+    font-size: 16px;
+    letter-spacing:.02em;
+  }
+
+  /* ====== ルーレット（視認性アップ版） ====== */
+  .roulette{
+    display:flex;
+    gap:14px;
+    align-items:center;
+    justify-content:center;
+    padding: 10px 6px 6px;
+    position:relative;
+  }
+
+  .wheelWrap{
+    position:relative;
+    width: 110px; height: 110px;
+    display:grid;
+    place-items:center;
+  }
+
+  .wheel{
+    width: 110px; height: 110px;
+    border-radius: 50%;
+    background:
+      conic-gradient(from 0deg,
+        rgba(255,79,179,.95) 0 25%,
+        rgba(255,255,255,.95) 25% 50%,
+        rgba(255,79,179,.95) 50% 75%,
+        rgba(255,255,255,.95) 75% 100%);
+    box-shadow: inset 0 10px 18px rgba(255,255,255,.35),
+                inset 0 -12px 20px rgba(0,0,0,.18),
+                0 18px 30px rgba(0,0,0,.16);
+    position:relative;
+    outline: 3px solid rgba(255,255,255,.65);
+  }
+  .wheel:after{
+    content:"";
+    position:absolute;
+    inset:20px;
+    border-radius:50%;
+    background: radial-gradient(circle at 30% 30%, #fff 0 40%, rgba(255,255,255,.65) 41% 100%);
+    border: 1px solid rgba(0,0,0,.05);
+  }
+
+  /* ★ 指し示し（大きい矢印＋キラキラ） */
+  .pointer{
+    position:absolute;
+    top:-14px;
+    left:50%;
+    transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 14px solid transparent;
+    border-right: 14px solid transparent;
+    border-bottom: 26px solid rgba(255,255,255,.98);
+    filter: drop-shadow(0 14px 18px rgba(0,0,0,.18));
+    animation: pointerBounce .7s ease-in-out infinite alternate;
+  }
+  .pointer:after{
+    content:"✨";
+    position:absolute;
+    left:50%;
+    transform: translateX(-50%);
+    top:-20px;
+    font-size: 18px;
+    filter: drop-shadow(0 10px 16px rgba(255,79,179,.22));
+  }
+  @keyframes pointerBounce{
+    from{ transform: translateX(-50%) translateY(0); }
+    to{ transform: translateX(-50%) translateY(-4px); }
+  }
+
+  /* ★ どこを指してるか分かるように、上の位置に光るリング */
+  .glowRing{
+    position:absolute;
+    inset:-6px;
+    border-radius:50%;
+    border: 3px solid rgba(255,255,255,.55);
+    box-shadow: 0 0 0 8px rgba(255,79,179,.08), 0 0 28px rgba(255,79,179,.18);
+    pointer-events:none;
+  }
+
+  .spinText{
+    text-align:center;
+    font-weight: 1000;
+    font-size: 14px;
+    margin-top: 6px;
+  }
+  .resultPill{
+    margin-top: 8px;
+    display:inline-flex;
+    gap:8px;
+    align-items:center;
+    padding: 8px 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.72);
+    border: 1px solid rgba(255,255,255,.85);
+    box-shadow: 0 10px 18px rgba(0,0,0,.10);
+    font-weight: 1000;
+  }
+
+  .passBtn{
+    width: 100%;
+    border-radius: 20px;
+    padding: 12px 14px;
+    font-weight: 1000;
+    background: linear-gradient(135deg, #fff, #ffe9f6);
+    border: 1px solid rgba(255,255,255,.9);
+    box-shadow: 0 18px 34px rgba(0,0,0,.15);
+    cursor:pointer;
+  }
+
+  .toast{
+    position:fixed;
+    left:50%;
+    bottom: 14px;
+    transform: translateX(-50%);
+    background: rgba(255,255,255,.88);
+    border: 1px solid rgba(255,255,255,.92);
+    box-shadow: var(--shadow2);
+    padding: 10px 12px;
+    border-radius: 999px;
+    font-weight: 900;
+    font-size: 12px;
+    color: var(--ink);
+    z-index: 50;
+    display:none;
+    max-width: min(560px, 92vw);
+    text-align:center;
+  }
+  .toast.show{ display:block; animation: pop .18s ease-out; }
+  @keyframes pop{ from{ transform:translateX(-50%) scale(.98); opacity:.6; } to{ transform:translateX(-50%) scale(1); opacity:1; } }
+
+  /* tiny celebration hearts */
+  .burst{
+    position:absolute;
+    left:50%; top:50%;
+    transform: translate(-50%,-50%);
+    pointer-events:none;
+    z-index: 20;
+  }
+  .burst span{
+    position:absolute;
+    font-size: 18px;
+    opacity:0;
+    animation: fly 850ms ease-out forwards;
+    filter: drop-shadow(0 10px 16px rgba(255,79,179,.18));
+  }
+  @keyframes fly{
+    0%{ transform: translate(0,0) scale(.9); opacity:0; }
+    20%{ opacity:1; }
+    100%{ transform: translate(var(--dx), var(--dy)) scale(1.12); opacity:0; }
+  }
+
+  .safeBottom{ padding-bottom: max(14px, env(safe-area-inset-bottom)); }
+
+  /* iPhoneでの余白/文字サイズ微調整 */
+  @media (max-width: 430px){
+    .wrap{ padding: 14px 12px 22px; }
+    .boardCard{ padding: 12px; }
+    .side{ padding: 12px; }
+    .btn.small{ font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+<div class="fx" aria-hidden="true"></div>
+
+<div class="wrap safeBottom">
+  <header>
+    <div class="brand">
+      <div class="title">キラキラ オセロ <span class="pill"><span class="heart" aria-hidden="true"></span> ピンク×ホワイト</span></div>
+      <div class="pill" id="modePill">モード：—</div>
+    </div>
+
+    <div class="topActions">
+      <button class="btn small primary" id="newGameBtn">新しいゲーム</button>
+      <button class="btn small" id="rouletteBtn">先攻ルーレット</button>
+      <button class="btn small danger" id="resetStatsBtn">記録リセット</button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <div class="card boardCard">
+      <div class="boardHeader">
+        <div class="status">
+          <div class="statusLine" id="turnLine">—</div>
+          <div class="subLine" id="subLine">—</div>
+        </div>
+        <div class="scoreRow">
+          <div class="badge"><span class="dot pink"></span>ピンク <span id="pinkCount">2</span></div>
+          <div class="badge"><span class="dot white"></span>ホワイト <span id="whiteCount">2</span></div>
+        </div>
+      </div>
+
+      <div class="boardWrap">
+        <div class="board" id="board" role="grid" aria-label="オセロ盤"></div>
+
+        <!-- Pass overlay -->
+        <div class="overlay" id="passOverlay" role="dialog" aria-modal="true">
+          <div class="modal">
+            <h2>置ける場所がないよ</h2>
+            <p style="margin:0 0 10px;color:var(--muted);font-weight:800;font-size:12px;line-height:1.6;">
+              パスして相手の番にするね。
+            </p>
+            <button class="passBtn" id="passBtn">パス</button>
+          </div>
+        </div>
+
+        <!-- Roulette overlay -->
+        <div class="overlay" id="rouletteOverlay" role="dialog" aria-modal="true">
+          <div class="modal">
+            <h2>先攻ルーレット</h2>
+
+            <div class="roulette">
+              <div class="wheelWrap" aria-hidden="true">
+                <div class="pointer"></div>
+                <div class="glowRing"></div>
+                <div class="wheel" id="wheel"></div>
+                <div class="burst" id="burst"></div>
+              </div>
+            </div>
+
+            <div class="spinText" id="rouletteText">くるくる…！</div>
+            <div style="text-align:center;">
+              <span class="resultPill" id="rouletteResult" style="display:none;"></span>
+            </div>
+            <div class="row" style="justify-content:center;margin-top:12px;">
+              <button class="btn pink" id="spinBtn">回す！</button>
+              <button class="btn" id="closeRouletteBtn">閉じる</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- End overlay -->
+        <div class="overlay" id="endOverlay" role="dialog" aria-modal="true">
+          <div class="modal">
+            <h2 id="endTitle">ゲーム終了</h2>
+            <p id="endBody" style="margin:0 0 10px;color:var(--muted);font-weight:800;font-size:12px;line-height:1.6;"></p>
+            <div class="row" style="justify-content:center;">
+              <button class="btn primary" id="playAgainBtn">もう一回</button>
+              <button class="btn" id="closeEndBtn">閉じる</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <aside class="card side">
+      <div class="sectionTitle">ゲーム設定</div>
+      <div class="row">
+        <select class="select" id="modeSelect" aria-label="対戦モード">
+          <option value="cpu">CPU対戦</option>
+          <option value="pvp">2人対戦</option>
+        </select>
+
+        <select class="select" id="levelSelect" aria-label="CPU難易度">
+          <option value="1">CPU Lv1（ゆるゆる）</option>
+          <option value="2">CPU Lv2（やさしい）</option>
+          <option value="3" selected>CPU Lv3（小1が勝てる目安）</option>
+          <option value="4">CPU Lv4（つよめ）</option>
+          <option value="5">CPU Lv5（本気）</option>
+        </select>
+      </div>
+
+      <div class="sectionTitle">累計記録</div>
+      <div class="kpi">
+        <div class="box">
+          <div class="num" id="gamesTotal">0</div>
+          <div class="lab">ゲーム数</div>
+        </div>
+        <div class="box">
+          <div class="num"><span id="pinkWins">0</span> - <span id="whiteWins">0</span></div>
+          <div class="lab">勝ち（ピンク-ホワイト）</div>
+        </div>
+        <div class="box">
+          <div class="num" id="draws">0</div>
+          <div class="lab">引き分け</div>
+        </div>
+        <div class="box">
+          <div class="num" id="winRate">—</div>
+          <div class="lab">ピンク勝率</div>
+        </div>
+      </div>
+
+      <div class="sectionTitle">ヒント</div>
+      <div class="note">
+        ・置ける場所（うすい丸）が出るよ。<br>
+        ・パスが必要なときは、盤の真ん中にボタンが出るよ。<br>
+        ・CPU対戦では、あなたは<strong>ピンク固定</strong>だよ。<br>
+        ・対戦開始時は<strong>自動でルーレット</strong>が回るよ（CPU戦も！）
+      </div>
+
+      <div class="sectionTitle">操作</div>
+      <div class="row">
+        <button class="btn primary" id="hintToggleBtn">ヒント：ON</button>
+        <button class="btn" id="undoBtn" title="1手だけ戻す（CPU戦はあなたの手まで）">1手もどす</button>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  // ====== 定義 ======
+  const SIZE = 8;
+  const EMPTY = 0;
+  const PINK = 1;
+  const WHITE = -1;
+  const DIRS = [
+    [-1,-1],[-1,0],[-1,1],
+    [0,-1],        [0,1],
+    [1,-1],[1,0],[1,1]
+  ];
+
+  // UI
+  const boardEl = document.getElementById('board');
+  const turnLine = document.getElementById('turnLine');
+  const subLine  = document.getElementById('subLine');
+  const pinkCountEl = document.getElementById('pinkCount');
+  const whiteCountEl = document.getElementById('whiteCount');
+
+  const modeSelect = document.getElementById('modeSelect');
+  const levelSelect = document.getElementById('levelSelect');
+  const modePill = document.getElementById('modePill');
+
+  const newGameBtn = document.getElementById('newGameBtn');
+  const rouletteBtn = document.getElementById('rouletteBtn');
+  const resetStatsBtn = document.getElementById('resetStatsBtn');
+
+  const passOverlay = document.getElementById('passOverlay');
+  const passBtn = document.getElementById('passBtn');
+
+  const rouletteOverlay = document.getElementById('rouletteOverlay');
+  const wheelEl = document.getElementById('wheel');
+  const rouletteText = document.getElementById('rouletteText');
+  const rouletteResult = document.getElementById('rouletteResult');
+  const spinBtn = document.getElementById('spinBtn');
+  const closeRouletteBtn = document.getElementById('closeRouletteBtn');
+  const burstEl = document.getElementById('burst');
+
+  const endOverlay = document.getElementById('endOverlay');
+  const endTitle = document.getElementById('endTitle');
+  const endBody = document.getElementById('endBody');
+  const playAgainBtn = document.getElementById('playAgainBtn');
+  const closeEndBtn = document.getElementById('closeEndBtn');
+
+  const gamesTotalEl = document.getElementById('gamesTotal');
+  const pinkWinsEl = document.getElementById('pinkWins');
+  const whiteWinsEl = document.getElementById('whiteWins');
+  const drawsEl = document.getElementById('draws');
+  const winRateEl = document.getElementById('winRate');
+
+  const hintToggleBtn = document.getElementById('hintToggleBtn');
+  const undoBtn = document.getElementById('undoBtn');
+  const toastEl = document.getElementById('toast');
+
+  // ====== State ======
+  let board = makeInitialBoard();
+  let current = PINK;
+  let gameMode = 'cpu';
+  let cpuLevel = 3;
+
+  // CPU戦: プレイヤーはピンク固定
+  let playerColor = PINK;
+  let cpuColor = WHITE;
+
+  let showHints = true;
+  let isBusy = false;
+  let history = [];
+  let spinning = false;
+  let rouletteAutoTimer = null;
+
+  // CPUスピード（要望：+0.2秒）
+  const CPU_DELAY_MS = 620; // 420 -> 620
+
+  // stats
+  const STATS_KEY = 'sparkly_othello_stats_v1';
+  let stats = loadStats();
+
+  // ====== 盤面 ======
+  function makeEmptyBoard(){
+    return Array.from({length: SIZE}, () => Array(SIZE).fill(EMPTY));
+  }
+  function makeInitialBoard(){
+    const b = makeEmptyBoard();
+    const m = SIZE/2;
+    b[m-1][m-1] = WHITE;
+    b[m][m]     = WHITE;
+    b[m-1][m]   = PINK;
+    b[m][m-1]   = PINK;
+    return b;
+  }
+  function cloneBoard(b){ return b.map(row => row.slice()); }
+  function inBounds(r,c){ return r>=0 && r<SIZE && c>=0 && c<SIZE; }
+
+  function getFlips(b, r, c, color){
+    if (b[r][c] !== EMPTY) return [];
+    const flips = [];
+    for (const [dr,dc] of DIRS){
+      let rr=r+dr, cc=c+dc;
+      const line = [];
+      while(inBounds(rr,cc) && b[rr][cc] === -color){
+        line.push([rr,cc]);
+        rr+=dr; cc+=dc;
+      }
+      if (line.length>0 && inBounds(rr,cc) && b[rr][cc] === color){
+        flips.push(...line);
+      }
+    }
+    return flips;
+  }
+  function getLegalMoves(b, color){
+    const moves = [];
+    for (let r=0;r<SIZE;r++){
+      for (let c=0;c<SIZE;c++){
+        const flips = getFlips(b,r,c,color);
+        if (flips.length) moves.push({r,c,flips});
+      }
+    }
+    return moves;
+  }
+  function applyMove(b, move, color){
+    const nb = cloneBoard(b);
+    nb[move.r][move.c] = color;
+    for (const [rr,cc] of move.flips) nb[rr][cc] = color;
+    return nb;
+  }
+  function countStones(b){
+    let p=0,w=0;
+    for (let r=0;r<SIZE;r++){
+      for (let c=0;c<SIZE;c++){
+        if (b[r][c]===PINK) p++;
+        else if (b[r][c]===WHITE) w++;
+      }
+    }
+    return {p,w};
+  }
+  function isGameOver(b){
+    return getLegalMoves(b, PINK).length === 0 && getLegalMoves(b, WHITE).length === 0;
+  }
+
+  // ====== 表示 ======
+  function render(){
+    const {p,w} = countStones(board);
+    pinkCountEl.textContent = p;
+    whiteCountEl.textContent = w;
+
+    const turnName = current===PINK ? 'ピンク' : 'ホワイト';
+    const turnDot = current===PINK ? '<span class="dot pink"></span>' : '<span class="dot white"></span>';
+    const modeText = (gameMode==='cpu') ? `CPU対戦（Lv${cpuLevel}）` : '2人対戦';
+    modePill.textContent = `モード：${modeText}`;
+
+    if (gameMode==='cpu'){
+      const who = (current===playerColor) ? 'あなたの番' : 'CPUの番';
+      turnLine.innerHTML = `${turnDot} <span>${who}：${turnName}</span>`;
+      subLine.textContent = `あなた＝ピンク固定 / 先攻はルーレットで決まるよ`;
+    }else{
+      const who = (current===PINK) ? 'プレイヤー（ピンク）の番' : 'プレイヤー（ホワイト）の番';
+      turnLine.innerHTML = `${turnDot} <span>${who}</span>`;
+      subLine.textContent = `先攻はルーレットで決まるよ（ピンク or ホワイト）`;
+    }
+
+    boardEl.innerHTML = '';
+    const legal = showHints ? getLegalMoves(board, current) : [];
+    const hintSet = new Set(legal.map(m => `${m.r},${m.c}`));
+
+    for (let r=0;r<SIZE;r++){
+      for (let c=0;c<SIZE;c++){
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.setAttribute('role','gridcell');
+        cell.dataset.r = r;
+        cell.dataset.c = c;
+
+        const v = board[r][c];
+        if (v !== EMPTY){
+          const stone = document.createElement('div');
+          stone.className = 'stone ' + (v===PINK ? 'pink' : 'white');
+          cell.appendChild(stone);
+          cell.classList.add('disabled');
+        }else{
+          if (showHints && hintSet.has(`${r},${c}`) && !isBusy){
+            const hint = document.createElement('div');
+            hint.className = 'hint';
+            cell.appendChild(hint);
+          }
+        }
+        boardEl.appendChild(cell);
+      }
+    }
+
+    maybeShowPass();
+    renderStats();
+  }
+
+  function renderStats(){
+    gamesTotalEl.textContent = stats.games;
+    pinkWinsEl.textContent = stats.pinkWins;
+    whiteWinsEl.textContent = stats.whiteWins;
+    drawsEl.textContent = stats.draws;
+    const total = stats.games;
+    if (total>0){
+      const rate = (stats.pinkWins / total) * 100;
+      winRateEl.textContent = `${rate.toFixed(1)}%`;
+    }else{
+      winRateEl.textContent = '—';
+    }
+  }
+
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastEl._t);
+    toastEl._t = setTimeout(()=>toastEl.classList.remove('show'), 1600);
+  }
+
+  // ====== 履歴（Undo） ======
+  function pushHistory(){
+    history.push({ board: cloneBoard(board), current });
+    if (history.length > 140) history.shift();
+  }
+  function canUndo(){
+    return history.length > 0 && !isBusy && !isGameOver(board);
+  }
+  function undo(){
+    if (!canUndo()) return;
+    if (gameMode==='cpu'){
+      let snap = history.pop();
+      board = snap.board; current = snap.current;
+      if (current !== playerColor && history.length){
+        snap = history.pop();
+        board = snap.board; current = snap.current;
+      }
+    }else{
+      const snap = history.pop();
+      board = snap.board; current = snap.current;
+    }
+    toast('1手もどしたよ');
+    render();
+  }
+
+  // ====== 終了 ======
+  function endGame(){
+    const {p,w} = countStones(board);
+    let result;
+    if (p>w) result = 'ピンクの勝ち！';
+    else if (w>p) result = 'ホワイトの勝ち！';
+    else result = '引き分け！';
+
+    stats.games++;
+    if (p>w) stats.pinkWins++;
+    else if (w>p) stats.whiteWins++;
+    else stats.draws++;
+    saveStats(stats);
+
+    endTitle.textContent = 'ゲーム終了';
+    endBody.innerHTML = `結果：<strong>${result}</strong><br>ピンク ${p} / ホワイト ${w}`;
+    endOverlay.classList.add('show');
+    renderStats();
+  }
+
+  function nextTurn(){
+    if (isGameOver(board)){
+      endGame();
+      return;
+    }
+    maybeShowPass();
+    render();
+
+    if (gameMode==='cpu' && current === cpuColor){
+      cpuThinkAndMove();
+    }
+  }
+
+  // ====== パス ======
+  function maybeShowPass(){
+    const legal = getLegalMoves(board, current);
+    if (legal.length === 0 && !isGameOver(board)){
+      // CPUは自動パス、プレイヤー側は中央ボタン
+      if (gameMode==='cpu' && current===cpuColor){
+        setTimeout(()=>{
+          if (isGameOver(board)) return;
+          current = -current;
+          toast('CPUは置けないのでパス');
+          nextTurn();
+        }, 220);
+      }else{
+        passOverlay.classList.add('show');
+      }
+      return true;
+    }else{
+      passOverlay.classList.remove('show');
+      return false;
+    }
+  }
+
+  function doPass(){
+    passOverlay.classList.remove('show');
+    current = -current;
+    toast('パスしたよ');
+    nextTurn();
+  }
+
+  // ====== クリック ======
+  function handleCellClick(r,c){
+    if (isBusy) return;
+    if (endOverlay.classList.contains('show')) return;
+    if (rouletteOverlay.classList.contains('show')) return;
+    if (passOverlay.classList.contains('show')) return;
+
+    if (gameMode==='cpu' && current !== playerColor) return;
+
+    const legal = getLegalMoves(board, current);
+    const move = legal.find(m => m.r===r && m.c===c);
+    if (!move){
+      toast('そこには置けないよ');
+      return;
+    }
+    pushHistory();
+    board = applyMove(board, move, current);
+    current = -current;
+    nextTurn();
+  }
+
+  // ====== ルーレット ======
+  function burst(){
+    // ちいさいハート/キラキラが飛ぶ
+    burstEl.innerHTML = '';
+    const icons = ['💖','✨','💗','🌟','💕'];
+    const n = 12;
+    for (let i=0;i<n;i++){
+      const s = document.createElement('span');
+      s.textContent = icons[Math.floor(Math.random()*icons.length)];
+      const ang = (Math.PI*2) * (i/n);
+      const dx = Math.cos(ang) * (22 + Math.random()*34);
+      const dy = Math.sin(ang) * (22 + Math.random()*34);
+      s.style.setProperty('--dx', `${dx}px`);
+      s.style.setProperty('--dy', `${dy}px`);
+      s.style.animationDelay = `${Math.random()*120}ms`;
+      burstEl.appendChild(s);
+    }
+  }
+
+  function openRoulette({autoSpin=false}={}){
+    rouletteResult.style.display = 'none';
+    rouletteResult.textContent = '';
+    rouletteText.textContent = autoSpin ? '自動で回すよ…！' : 'くるくる…！';
+    wheelEl.style.transition = 'none';
+    wheelEl.style.transform = 'rotate(0deg)';
+    rouletteOverlay.classList.add('show');
+    spinning = false;
+
+    clearTimeout(rouletteAutoTimer);
+    if (autoSpin){
+      rouletteAutoTimer = setTimeout(()=>spinRoulette(true), 500);
+    }
+  }
+
+  function closeRoulette(){
+    if (spinning) return; // 回転中は閉じない（事故防止）
+    rouletteOverlay.classList.remove('show');
+  }
+
+  function spinRoulette(isAuto=false){
+    if (spinning) return;
+    spinning = true;
+    rouletteResult.style.display = 'none';
+    rouletteText.textContent = isAuto ? 'くるくる…（自動）' : 'いくよ…！';
+    spinBtn.disabled = true;
+    closeRouletteBtn.disabled = true;
+
+    const startColor = (Math.random() < 0.5) ? PINK : WHITE;
+
+    const base = 360 * (5 + Math.floor(Math.random()*3)); // 5〜7回転
+    // 目安：pointerは上（0deg）なので、その近辺に色が来るようにoffset
+    const offset = (startColor===PINK) ? 18 : 198;
+    const deg = base + offset + Math.floor(Math.random()*26);
+    wheelEl.style.transition = 'transform 1.55s cubic-bezier(.08,.82,.18,1)';
+    wheelEl.style.transform = `rotate(${deg}deg)`;
+
+    // tickっぽい演出（文字）
+    rouletteText.textContent = 'カチカチカチ…✨';
+
+    setTimeout(()=>{
+      burst();
+      const label = (startColor===PINK) ? 'ピンクが先攻！' : 'ホワイトが先攻！';
+      rouletteText.textContent = '決まった！💖';
+      rouletteResult.innerHTML = `${startColor===PINK ? '<span class="dot pink"></span>' : '<span class="dot white"></span>'} ${label}`;
+      rouletteResult.style.display = 'inline-flex';
+
+      current = startColor;
+
+      // CPU戦：プレイヤーは必ずピンク固定
+      if (gameMode==='cpu'){
+        playerColor = PINK;
+        cpuColor = WHITE;
+      }
+
+      spinning = false;
+      spinBtn.disabled = false;
+      closeRouletteBtn.disabled = false;
+
+      render();
+
+      // CPUが先攻なら、少し待って打つ（要望：+0.2秒）
+      if (gameMode==='cpu' && current===cpuColor){
+        setTimeout(()=>cpuThinkAndMove(), CPU_DELAY_MS);
+      }
+
+      // 自動ルーレットは見せ場の後に自動で閉じる
+      if (isAuto){
+        setTimeout(()=>closeRoulette(), 900);
+      }
+    }, 1600);
+  }
+
+  // ====== CPU ======
+  const CORNERS = new Set(["0,0","0,7","7,0","7,7"]);
+  function isEdge(r,c){ return r===0||r===7||c===0||c===7; }
+  function isXSq(r,c){
+    return (r===1&&c===1)||(r===1&&c===6)||(r===6&&c===1)||(r===6&&c===6);
+  }
+  function cornerEmptyNear(b,r,c){
+    if (r===1&&c===1) return b[0][0]===EMPTY;
+    if (r===1&&c===6) return b[0][7]===EMPTY;
+    if (r===6&&c===1) return b[7][0]===EMPTY;
+    if (r===6&&c===6) return b[7][7]===EMPTY;
+    return false;
+  }
+
+  function evaluate(b, color){
+    const opp = -color;
+    const {p,w} = countStones(b);
+    const my = (color===PINK)?p:w;
+    const op = (color===PINK)?w:p;
+
+    const m1 = getLegalMoves(b, color).length;
+    const m2 = getLegalMoves(b, opp).length;
+
+    let c1=0,c2=0;
+    for (const key of CORNERS){
+      const [r,c] = key.split(',').map(Number);
+      if (b[r][c]===color) c1++;
+      else if (b[r][c]===opp) c2++;
+    }
+
+    let e1=0,e2=0;
+    for (let i=0;i<SIZE;i++){
+      const pts = [[0,i],[7,i],[i,0],[i,7]];
+      for (const [r,c] of pts){
+        if (b[r][c]===color) e1++;
+        else if (b[r][c]===opp) e2++;
+      }
+    }
+
+    const piece = (my - op);
+    const mobility = (m1 - m2) * 6;
+    const corners = (c1 - c2) * 60;
+    const edges = (e1 - e2) * 3;
+
+    const filled = my + op;
+    const late = filled > 52;
+    const pieceWeight = late ? 3 : 1;
+
+    return corners + mobility + edges + piece*pieceWeight;
+  }
+
+  function pickByHeuristic(legal, b, color, randomness){
+    const scored = legal.map(m => {
+      const nb = applyMove(b, m, color);
+      let s = evaluate(nb, color);
+      const key = `${m.r},${m.c}`;
+      if (CORNERS.has(key)) s += 120;
+      if (isXSq(m.r,m.c) && cornerEmptyNear(b,m.r,m.c)) s -= 70;
+      if (isEdge(m.r,m.c)) s += 8;
+      return {m, s};
+    }).sort((a,b)=>b.s-a.s);
+
+    const best = scored[0].s;
+    const threshold = best - Math.max(10, best*Math.min(.12, randomness));
+    const pool = scored.filter(x => x.s >= threshold);
+    return pool[Math.floor(Math.random()*pool.length)].m;
+  }
+
+  function pickSlightlyWorse(legal, b, color){
+    const scored = legal.map(m => {
+      const nb = applyMove(b, m, color);
+      return {m, s: evaluate(nb, color)};
+    }).sort((a,b)=>b.s-a.s);
+    if (scored.length<=2) return scored[0].m;
+    const start = Math.min(2, scored.length-1);
+    const end = Math.min(scored.length-1, start + Math.max(2, Math.floor(scored.length*0.4)));
+    const idx = start + Math.floor(Math.random()*(end-start+1));
+    return scored[idx].m;
+  }
+
+  function minimaxPick(b, color, depth, noise){
+    const legal = getLegalMoves(b, color);
+    let best = null;
+    let bestScore = -Infinity;
+    for (const m of legal){
+      const nb = applyMove(b, m, color);
+      const score = minimax(nb, -color, depth-1, -Infinity, Infinity, color);
+      const jitter = (Math.random()*2 - 1) * (noise * 20);
+      const s = score + jitter;
+      if (s > bestScore){
+        bestScore = s;
+        best = m;
+      }
+    }
+    return best || legal[0];
+  }
+
+  function minimax(b, turn, depth, alpha, beta, rootColor){
+    if (depth<=0 || isGameOver(b)){
+      return evaluate(b, rootColor);
+    }
+    const moves = getLegalMoves(b, turn);
+    if (moves.length===0){
+      return minimax(b, -turn, depth-1, alpha, beta, rootColor);
+    }
+    const maximizing = (turn === rootColor);
+    if (maximizing){
+      let value = -Infinity;
+      for (const m of moves){
+        const nb = applyMove(b, m, turn);
+        value = Math.max(value, minimax(nb, -turn, depth-1, alpha, beta, rootColor));
+        alpha = Math.max(alpha, value);
+        if (alpha >= beta) break;
+      }
+      return value;
+    }else{
+      let value = Infinity;
+      for (const m of moves){
+        const nb = applyMove(b, m, turn);
+        value = Math.min(value, minimax(nb, -turn, depth-1, alpha, beta, rootColor));
+        beta = Math.min(beta, value);
+        if (alpha >= beta) break;
+      }
+      return value;
+    }
+  }
+
+  function cpuThinkAndMove(){
+    if (isBusy) return;
+    isBusy = true;
+    render();
+
+    const legal = getLegalMoves(board, cpuColor);
+    if (legal.length===0){
+      isBusy = false;
+      current = -current;
+      toast('CPUは置けないのでパス');
+      nextTurn();
+      return;
+    }
+
+    const level = cpuLevel|0;
+    let move;
+
+    if (level===1){
+      move = legal[Math.floor(Math.random()*legal.length)];
+    }else if (level===2){
+      move = pickByHeuristic(legal, board, cpuColor, 0.35);
+    }else if (level===3){
+      if (Math.random() < 0.30){
+        move = legal[Math.floor(Math.random()*legal.length)];
+      }else{
+        move = pickByHeuristic(legal, board, cpuColor, 0.55);
+      }
+      if (Math.random() < 0.18){
+        move = pickSlightlyWorse(legal, board, cpuColor);
+      }
+    }else if (level===4){
+      move = minimaxPick(board, cpuColor, 2, 0.12);
+    }else{
+      move = minimaxPick(board, cpuColor, 3, 0.06);
+    }
+
+    setTimeout(()=>{
+      pushHistory();
+      board = applyMove(board, move, cpuColor);
+      current = -cpuColor;
+      isBusy = false;
+      nextTurn();
+    }, CPU_DELAY_MS); // ★ +0.2秒反映
+  }
+
+  // ====== stats ======
+  function loadStats(){
+    try{
+      const raw = localStorage.getItem(STATS_KEY);
+      if (!raw) return {games:0,pinkWins:0,whiteWins:0,draws:0};
+      const s = JSON.parse(raw);
+      return {
+        games: +s.games||0,
+        pinkWins: +s.pinkWins||0,
+        whiteWins: +s.whiteWins||0,
+        draws: +s.draws||0
+      };
+    }catch{
+      return {games:0,pinkWins:0,whiteWins:0,draws:0};
+    }
+  }
+  function saveStats(s){ localStorage.setItem(STATS_KEY, JSON.stringify(s)); }
+  function resetStats(){
+    stats = {games:0,pinkWins:0,whiteWins:0,draws:0};
+    saveStats(stats);
+    toast('記録をリセットしたよ');
+    renderStats();
+  }
+
+  // ====== 新規ゲーム（★開始時に自動ルーレット） ======
+  function newGame(keepMode=true){
+    board = makeInitialBoard();
+    history = [];
+    isBusy = false;
+
+    if (!keepMode){
+      gameMode = modeSelect.value;
+      cpuLevel = parseInt(levelSelect.value,10);
+    }
+
+    if (gameMode==='cpu'){
+      playerColor = PINK;
+      cpuColor = WHITE;
+    }
+
+    current = PINK;
+    passOverlay.classList.remove('show');
+    endOverlay.classList.remove('show');
+
+    render();
+
+    // ★ 対戦開始時：CPU戦も含めて自動でルーレットを回す
+    setTimeout(()=>{
+      openRoulette({autoSpin:true});
+    }, 450);
+  }
+
+  // ====== イベント ======
+  boardEl.addEventListener('click', (e)=>{
+    const cell = e.target.closest('.cell');
+    if (!cell) return;
+    handleCellClick(+cell.dataset.r, +cell.dataset.c);
+  });
+
+  passBtn.addEventListener('click', doPass);
+
+  newGameBtn.addEventListener('click', ()=> newGame(false));
+  rouletteBtn.addEventListener('click', ()=> openRoulette({autoSpin:false}));
+
+  modeSelect.addEventListener('change', ()=>{
+    gameMode = modeSelect.value;
+    levelSelect.disabled = (gameMode!=='cpu');
+    newGame(true);
+    toast(gameMode==='cpu' ? 'CPU対戦にしたよ（あなたはピンク）' : '2人対戦にしたよ');
+  });
+
+  levelSelect.addEventListener('change', ()=>{
+    cpuLevel = parseInt(levelSelect.value,10);
+    if (gameMode==='cpu'){
+      newGame(true);
+      toast(`CPUレベルをLv${cpuLevel}にしたよ`);
+    }
+  });
+
+  resetStatsBtn.addEventListener('click', ()=>{
+    // iPhoneでも扱いやすい confirm のまま
+    if (confirm('累計記録をリセットする？（元に戻せません）')){
+      resetStats();
+    }
+  });
+
+  spinBtn.addEventListener('click', ()=>spinRoulette(false));
+  closeRouletteBtn.addEventListener('click', closeRoulette);
+  rouletteOverlay.addEventListener('click', (e)=>{
+    if (e.target === rouletteOverlay) closeRoulette();
+  });
+
+  playAgainBtn.addEventListener('click', ()=>{
+    endOverlay.classList.remove('show');
+    newGame(true);
+  });
+  closeEndBtn.addEventListener('click', ()=> endOverlay.classList.remove('show'));
+  endOverlay.addEventListener('click', (e)=>{
+    if (e.target === endOverlay) endOverlay.classList.remove('show');
+  });
+
+  hintToggleBtn.addEventListener('click', ()=>{
+    showHints = !showHints;
+    hintToggleBtn.textContent = `ヒント：${showHints ? 'ON' : 'OFF'}`;
+    render();
+  });
+
+  undoBtn.addEventListener('click', undo);
+
+  window.addEventListener('keydown', (e)=>{
+    if (e.key === 'Escape'){
+      passOverlay.classList.remove('show');
+      if (!spinning) rouletteOverlay.classList.remove('show');
+      endOverlay.classList.remove('show');
+    }
+  });
+
+  // ====== 初期化 ======
+  function init(){
+    gameMode = modeSelect.value;
+    cpuLevel = parseInt(levelSelect.value,10);
+    levelSelect.disabled = (gameMode!=='cpu');
+
+    renderStats();
+    newGame(true);
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
